@@ -73,17 +73,20 @@ sudo chmod a+w $MNT_DIR
 ### Installing software.
 
 #### The basics
-Install one of the latest releases of 64-bit Python 3.6 installation. We recommend Anaconda3 with numpy 1.14.3 or newer.
+Python is a popular and expressive language that allows rapid prototyping and development, and thus has become a primary workhourse in scientific computing and data science applications, including deep learning. Install one of the latest releases of 64-bit Python 3.  We recommend the Anaconda3 Python distribution, which comes with many commonly used packages, such as numpy, scipy and pandas, already installed.
+
 You can download the Anaconda distribution of python from the [Anaconda website](https://www.anaconda.com/distribution/) or download it directly with the following commands:
 
 ```
 wget https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
 sudo sh Anaconda3-2019.03-Linux-x86_64.sh -b
-conda update -y conda
+export PATH=$HOME/anaconda3:$PATH  # Make sure anaconda is added to your path environment variable!
+conda update -y conda              # Update conda (-y forces update without prompt)
 ```
 
-Deep learning frameworks
+#### Deep learning frameworks
 
+Modern deep learning research relies heavily on powerful frameworks such as [PyTorch](https://pytorch.org/) and [Tensorflow](https://www.tensorflow.org/), which provide high level tools needed to develop and train deep neural networks. Critcally, these frameworks are backed by GPU-accelerated libraries such Nvidia's CUDA, cuDNN and NCCL to deliver high-performance multi-GPU accelerated training.   For a brief overview of popular supported deep learning frameworks, please see Nvidia's [Deep Learning Frameworks](https://developer.nvidia.com/deep-learning-frameworks).
 
 ```
 conda install -y pytorch==1.1 torchvision cudatoolkit=10.0 -c pytorch
