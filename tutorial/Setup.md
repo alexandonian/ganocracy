@@ -1,5 +1,7 @@
+
 ## 1. Configuring and Creating Virtual Machines
     TODO...
+    System Requirements
 
 ### Formatting and mounting a persistent disk
 
@@ -66,4 +68,53 @@ sudo mkdir -p $MNT_DIR
 sudo mkfs.ext4 -m 0 -F -E lazy_itable_init=0,lazy_journal_init=0,discard /dev/$DEVICE_ID
 sudo mount -o discard,defaults /dev/$DEVICE_ID $MNT_DIR
 sudo chmod a+w $MNT_DIR
+```
+
+### Installing software.
+
+#### The basics
+Install one of the latest releases of 64-bit Python 3.6 installation. We recommend Anaconda3 with numpy 1.14.3 or newer.
+You can download the Anaconda distribution of python from the [Anaconda website](https://www.anaconda.com/distribution/) or download it directly with the following commands:
+
+```
+wget https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
+sudo sh Anaconda3-2019.03-Linux-x86_64.sh -b
+conda update -y conda
+```
+
+Deep learning frameworks
+
+
+```
+conda install -y pytorch==1.1 torchvision cudatoolkit=10.0 -c pytorch
+pip install tensorflow-gpu keras visdom gpustat
+```
+
+
+cuda
+```
+wget https://developer.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda-repo-ubuntu1604-10-1-local-10.1.105-418.39_1.0-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.105-418.39_1.0-1_amd64.deb
+sudo apt-key add /var/cuda-repo-<version>/7fa2af80.pub
+sudo apt-get update
+sudo apt-get install -y --allow-unauthenticated cuda
+```
+
+cudnn
+```
+wget http://visiongpu23.csail.mit.edu/scratch/aandonia/pkg/cudnn-10.1-linux-x64-v7.5.1.10.tgz
+tar -xzvf cudnn-10.1-linux-x64-v7.5.1.10.tgz
+sudo cp cuda/include/cudnn.h /usr/local/cuda/include
+sudo cp cuda/lib64/libcudnn* /usr/local/cuda/lib64
+sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
+```
+
+nccl
+
+```
+wget http://visiongpu23.csail.mit.edu/scratch/aandonia/pkg/nccl_2.4.2-1+cuda10.1_x86_64.tar.gz
+tar -xzf nccl_2.4.2-1+cuda10.1_x86_64.tar.gz
+sudo mkdir -p /usr/local/nccl-2.4
+sudo cp -vRf nccl_2.4.2-1+cuda10.1_x86_64/* /usr/local/nccl-2.4
+sudo ln -s /usr/local/nccl-2.4/include/nccl.h /usr/include/nccl.h
 ```
