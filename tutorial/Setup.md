@@ -72,14 +72,14 @@ sudo chmod a+w $MNT_DIR
 
 ### Installing software.
 
-#### The basics
+#### The basics: Python
 Python is a popular and expressive language that allows rapid prototyping and development, and thus has become a primary workhourse in scientific computing and data science applications, including deep learning. Install one of the latest releases of 64-bit Python 3.  We recommend the Anaconda3 Python distribution, which comes with many commonly used packages, such as numpy, scipy and pandas, already installed.
 
 You can download the Anaconda distribution of python from the [Anaconda website](https://www.anaconda.com/distribution/) or download it directly with the following commands:
 
 ```
-wget https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
-sudo sh Anaconda3-2019.03-Linux-x86_64.sh -b
+curl -O https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
+sh Anaconda3-2019.03-Linux-x86_64.sh -b
 export PATH=$HOME/anaconda3:$PATH  # Make sure anaconda is added to your path environment variable!
 conda update -y conda              # Update conda (-y forces update without prompt)
 ```
@@ -94,7 +94,7 @@ pip install tensorflow-gpu keras visdom gpustat
 ```
 
 
-cuda
+[NVIDIA CUDA](https://developer.nvidia.com/cuda-zone)
 ```
 wget https://developer.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda-repo-ubuntu1604-10-1-local-10.1.105-418.39_1.0-1_amd64.deb
 sudo dpkg -i cuda-repo-ubuntu1604-10-1-local-10.1.105-418.39_1.0-1_amd64.deb
@@ -103,7 +103,7 @@ sudo apt-get update
 sudo apt-get install -y --allow-unauthenticated cuda
 ```
 
-cudnn
+[NVIDIA cuDNN](https://developer.nvidia.com/cudnn)
 ```
 wget http://visiongpu23.csail.mit.edu/scratch/aandonia/pkg/cudnn-10.1-linux-x64-v7.5.1.10.tgz
 tar -xzvf cudnn-10.1-linux-x64-v7.5.1.10.tgz
@@ -112,7 +112,7 @@ sudo cp cuda/lib64/libcudnn* /usr/local/cuda/lib64
 sudo chmod a+r /usr/local/cuda/include/cudnn.h /usr/local/cuda/lib64/libcudnn*
 ```
 
-nccl
+[NVIDIA NCCL](https://developer.nvidia.com/nccl)
 
 ```
 wget http://visiongpu23.csail.mit.edu/scratch/aandonia/pkg/nccl_2.4.2-1+cuda10.1_x86_64.tar.gz
