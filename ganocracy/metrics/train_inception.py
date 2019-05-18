@@ -139,6 +139,7 @@ def main_worker(gpu, ngpus_per_node, args):
         model = models.__dict__[args.arch]()
 
     model.fc = nn.Linear(model.fc.in_features, 365)
+    model.AuxLogits.fc = nn.Linear(model.AuxLogits.fc.in_features, 365)
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
@@ -274,7 +275,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer': optimizer.state_dict(),
-            }, is_best)
+            }, is_best, filename=f'{args.arch}_checkpoint.pth.tar')
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
@@ -373,7 +374,7 @@ def validate(val_loader, model, criterion, args):
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, 'best_' + filename)
 
 
 class AverageMeter(object):
