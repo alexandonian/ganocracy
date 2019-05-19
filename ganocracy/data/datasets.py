@@ -367,8 +367,8 @@ class ImageHDF5(data.Dataset):
                 img = f['imgs'][index]
                 target = f['labels'][index]
 
-            if self.transform is not None:
-                img = self.transform(img)
+        if self.transform is not None:
+            img = self.transform(img)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
@@ -382,7 +382,7 @@ class ImageHDF5(data.Dataset):
 def make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
     path = os.path.join(root, filename)
     if not os.path.exists(path):
-        _make_hdf5(root, filename,
+        _make_hdf5(dataloader, root, filename,
                    chunk_size=chunk_size,
                    compression=compression)
     else:
