@@ -2,6 +2,7 @@ import threading
 
 import torch
 import numpy as np
+from scipy.stats import truncnorm
 
 
 import torchvision.utils as vutils
@@ -18,11 +19,17 @@ def visualize_data(data, num_samples=64, figsize=(15, 15), title='Real Images'):
     else:
         raise ValueError(f'Unrecognized data source type: {type(data)}'
                          'Must be instance of either torch Dataset or DataLoader')
+    visualize_samples(samples, figsize=figsize, title=title)
+
+
+def visualize_samples(samples, figsize=(15, 15), title='Samples',
+                      padding=5, normalize=True):
     # Plot the real images
     plt.figure(figsize=figsize)
     plt.axis("off")
     plt.title(title)
-    plt.imshow(np.transpose(vutils.make_grid(samples, padding=5, normalize=True).cpu(), (1, 2, 0)))
+    im = vutils.make_grid(samples, padding=padding, normalize=normalize).cpu()
+    plt.imshow(np.transpose(im, (1, 2, 0)))
 
 
 def _save_sample(G, fixed_noise, filename, nrow=8, padding=2, normalize=True):
@@ -57,10 +64,7 @@ def interp(x0, x1, num_midpoints, device='cuda'):
     return torch.lerp(x0, x1, lerp)
 
 
-num_per_sheet = 4
-num_midpoints = 4
-dim_z = 10
-
-x0 = torch.randn(num_per_sheet, dim_z)
-x1 = torch.randn(num_per_sheet, dim_z)
-out = interp(x0, x1, num_midpoints, device='cpu')
+def truncated_z_sample(batch_size, dim_z, truncation=1, seed=None):
+    state = None if seed is None else np.random.RandomState(seed)
+    values = truncnorm.rvs(-2, 2, size=(batch_size, dim_z), random_state=state)
+    return truncation * values
