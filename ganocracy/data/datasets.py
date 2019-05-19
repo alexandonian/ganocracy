@@ -367,8 +367,8 @@ class ImageHDF5(data.Dataset):
                 img = f['imgs'][index]
                 target = f['labels'][index]
 
-            if self.transform is not None:
-                img = self.transform(img)
+        if self.transform is not None:
+            img = self.transform(img)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
