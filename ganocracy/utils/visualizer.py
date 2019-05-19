@@ -39,3 +39,28 @@ def save_samples(G, fixed_noise, filename, threaded=True):
         thread.start()
     else:
         _save_sample(G, fixed_noise, filename)
+
+
+def interp(x0, x1, num_midpoints, device='cuda'):
+    """Interpolate between x0 and x1.
+
+    Args:
+        x0 (array-like): Starting coord with shape [batch_size, ...]
+        x1 (array-like): Ending coord with shape [batch_size, ...]
+        num_midpoints (int): Number of midpoints to interpolate.
+        device (str, optional): Device to create interp. Defaults to 'cuda'.
+    """
+    x0 = x0.view(x0.size(0), 1, *x0.shape[1:])
+    x1 = x1.view(x1.size(0), 1, *x1.shape[1:])
+    lerp = torch.linspace(0, 1.0, num_midpoints + 2, device=device).to(x0.dtype)
+    lerp = lerp.view(1, -1, 1)
+    return torch.lerp(x0, x1, lerp)
+
+
+num_per_sheet = 4
+num_midpoints = 4
+dim_z = 10
+
+x0 = torch.randn(num_per_sheet, dim_z)
+x1 = torch.randn(num_per_sheet, dim_z)
+out = interp(x0, x1, num_midpoints, device='cpu')
