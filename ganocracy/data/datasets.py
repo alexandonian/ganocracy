@@ -379,6 +379,65 @@ class ImageHDF5(data.Dataset):
         return self.num_imgs
 
 
+def make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
+    path = os.path.join(root, filename)
+    if not os.path.exists(path):
+        _make_hdf5(root, filename,
+                   chunk_size=chunk_size,
+                   compression=compression)
+    else:
+        print('HDF5 file {} already exists!'.format(path))
+    return path
+
+
+def _make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
+    # HDF5 supports chunking and compression. You may want to experiment
+    # with different chunk sizes to see how it runs on your machines.
+    # Chunk Size/compression     Read speed @ 256x256   Read speed @ 128x128  Filesize @ 128x128    Time to write @128x128
+    # 1 / None                   20/s
+    # 500 / None                 ramps up to 77/s       102/s                 61GB                  23min
+    # 500 / LZF                                         8/s                   56GB                  23min
+    # 1000 / None                78/s
+    # 5000 / None                81/s
+    # auto:(125,1,16,32) / None                         11/s                  61GB
+
+    print('Starting to load {} into an HDF5 file with chunk size {} and compression {}...'.format(filename, chunk_size, compression))
+
+    # Loop over train loader
+    dataset_len = len(dataloader.dataset)
+    for i, (x, y) in enumerate(tqdm(dataloader)):
+        # Stick x into the range [0, 255] since it's coming from the train loader
+        x = (255 * ((x + 1) / 2.0)).byte().numpy()
+        # Numpyify y
+        y = y.numpy()
+
+        if i == 0:  # If we're on the first batch, prepare the hdf5.
+            with h5.File(os.path.join(root, filename), 'w') as f:
+                print('Producing dataset of len {}'.format(dataset_len))
+                maxshape = (dataset_len, x.shape[-3], x.shape[-2], x.shape[-1])
+                chunks = (chunk_size, x.shape[-3], x.shape[-2], x.shape[-1])
+                imgs_dset = f.create_dataset('imgs', x.shape, dtype='uint8',
+                                             maxshape=maxshape,
+                                             chunks=chunks,
+                                             compression=compression)
+                print('Image chunks chosen as {}'.format(imgs_dset.chunks))
+                imgs_dset[...] = x
+
+                labels_dset = f.create_dataset('labels', y.shape, dtype='int64',
+                                               maxshape=(dataset_len,),
+                                               chunks=(chunk_size,),
+                                               compression=compression)
+                print('Label chunks chosen as {}'.format(labels_dset.chunks))
+                labels_dset[...] = y
+
+        else:  # Append to the hdf5.
+            with h5.File(os.path.join(root, filename), 'a') as f:
+                f['imgs'].resize(f['imgs'].shape[0] + x.shape[0], axis=0)
+                f['imgs'][-x.shape[0]:] = x
+                f['labels'].resize(f['labels'].shape[0] + y.shape[0], axis=0)
+                f['labels'][-y.shape[0]:] = y
+
+
 def get_dataset(name, hdf5=True, size=64, targets=False):
     pass
 
