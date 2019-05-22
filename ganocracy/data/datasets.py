@@ -14,6 +14,8 @@ import torch.hub
 import torch.utils.data as data
 from tqdm import tqdm
 
+from . import transforms
+
 try:
     getattr(torch.hub, 'HASH_REGEX')
 except AttributeError:
@@ -34,6 +36,22 @@ data_urls = {
     },
     'satellite_images': {
         'tar': os.path.join(ROOT_URL, 'satellite_images-79716c2f.tar.gz')
+    },
+    'imagenet': {
+        'tar': os.path.join(ROOT_URL, 'imagenet.tar.gz'),
+        'hdf5': {
+            '64': os.path.join(ROOT_URL, 'I64.hdf5'),
+            '128': os.path.join(ROOT_URL, 'I128.hdf5'),
+            '256': os.path.join(ROOT_URL, 'I256.hdf5'),
+        },
+    },
+    'places365': {
+        'tar': os.path.join(ROOT_URL, 'places365.tar.gz'),
+        'hdf5': {
+            '64': os.path.join(ROOT_URL, 'P64.hdf5'),
+            '128': os.path.join(ROOT_URL, 'P128.hdf5'),
+            '256': os.path.join(ROOT_URL, 'P256.hdf5'),
+        }
     }
 }
 
@@ -378,6 +396,17 @@ class ImageHDF5(data.Dataset):
     def __len__(self):
         return self.num_imgs
 
+    def __repr__(self):
+        fmt_str = 'Dataset ' + self.__class__.__name__ + '\n'
+        fmt_str += '    Number of classes: {}\n'.format(len(self.classes))
+        fmt_str += '    Number of datapoints: {}\n'.format(self.__len__())
+        fmt_str += '    Root Location: {}\n'.format(self.root)
+        tmp = '    Transforms (if any): '
+        fmt_str += '{0}{1}\n'.format(tmp, self.transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
+        tmp = '    Target Transforms (if any): '
+        fmt_str += '{0}{1}'.format(tmp, self.target_transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
+        return fmt_str
+
 
 def make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
     path = os.path.join(root, filename)
@@ -438,7 +467,29 @@ def _make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
                 f['labels'][-y.shape[0]:] = y
 
 
-def get_dataset(name, hdf5=True, size=64, targets=False):
+def get_dataset(name, root_dir=None, resolution=128, filetype='tar'):
+    if filetype == 'tar':
+        url = data_urls[name]['tar']
+        data_dir = load_data_from_url(url, root_dir)
+        dataset = ImageFolder(root=data_dir,
+                              transform=transforms.Compose([
+                                  transforms.CenterCropLongEdge(),
+                                  transforms.Resize(resolution),
+                                  transforms.ToTensor(),
+                                  transforms.Normalize((0.5, 0.5, 0.5),
+                                                       (0.5, 0.5, 0.5))
+                              ]))
+    elif filetype == 'hdf5':
+        url = data_urls[name]['hdf5'][resolution]
+        hdf5_file = load_data_from_url(url, root_dir)
+        dataset = ImageHDF5(hdf5_file)
+    else:
+        raise ValueError('Unreconized filetype: {}'.format(filetype))
+
+    return dataset
+
+
+def old_get_dataset(name, hdf5=True, size=64, targets=False):
     pass
 
 

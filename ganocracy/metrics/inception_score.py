@@ -371,4 +371,5 @@ def calculate_inception_moments(dataloader, root, name, gpu=None, device='cuda')
 
     filename = os.path.join(root, name + '_inception_moments.npz')
     np.savez(filename, **{'mu': mu, 'sigma': sigma})
+    print('Saved {}'.format(filename))
     return filename
