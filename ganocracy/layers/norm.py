@@ -142,8 +142,8 @@ class ConditionalBatchNorm2d(nn.Module):
         super().__init__()
         self.num_features = num_features
         self.bn = nn.BatchNorm2d(num_features, affine=False, eps=eps, momentum=momentum)
-        self.gamma_embed = linear_func(num_classes, num_features, bias=False))
-        self.beta_embed = linear_func(num_classes, num_features, bias=False))
+        self.gamma_embed = linear_func(num_classes, num_features, bias=False)
+        self.beta_embed = linear_func(num_classes, num_features, bias=False)
 
     def forward(self, x, y):
         out = self.bn(x)
