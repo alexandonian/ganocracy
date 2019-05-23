@@ -117,12 +117,13 @@ class SNLinear(nn.Linear, SN):
     def forward(self, x):
         return F.linear(x, self.W_(), self.bias)
 
-        # Embedding layer with spectral norm
-        # We use num_embeddings as the dim instead of embedding_dim here
-        # for convenience sake
-
 
 class SNEmbedding(nn.Embedding, SN):
+    """Embedding layer with spectral norm.
+
+    We use num_embeddings as the dim instead of embedding_dim here
+    for convenience sake
+    """
     def __init__(self, num_embeddings, embedding_dim, padding_idx=None,
                  max_norm=None, norm_type=2, scale_grad_by_freq=False,
                  sparse=False, _weight=None,
@@ -146,7 +147,10 @@ class ConditionalBatchNorm2d(nn.Module):
         self.beta_embed = linear_func(num_classes, num_features, bias=False)
 
     def forward(self, x, y):
+        # First, compute standard batchnorm stats.
         out = self.bn(x)
+
+        # Learn class specific scale and shift.
         gamma = self.gamma_embed(y) + 1
         beta = self.beta_embed(y)
         out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
