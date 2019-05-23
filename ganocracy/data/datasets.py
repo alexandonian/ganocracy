@@ -353,7 +353,7 @@ class ImageHDF5(data.Dataset):
         self.target_transform = target_transform
         with h5.File(root, 'r') as f:
             self.num_imgs = len(f['labels'])
-            self.num_classes = len(np.unique(f['labels']))
+            self.num_classes = len(np.unique(f['labels'][:]))
 
         # Set the transform here.
         self.transform = transform
