@@ -350,8 +350,10 @@ class ImageHDF5(data.Dataset):
                  val_split=0, **kwargs):  # last four are dummies
 
         self.root = root
-        self.num_imgs = len(h5.File(root, 'r')['labels'])
         self.target_transform = target_transform
+        with h5.File(root, 'r') as f:
+            self.num_imgs = len(f['labels'])
+            self.num_classes = len(np.unique(f['labels']))
 
         # Set the transform here.
         self.transform = transform
@@ -398,7 +400,7 @@ class ImageHDF5(data.Dataset):
 
     def __repr__(self):
         fmt_str = 'Dataset ' + self.__class__.__name__ + '\n'
-        fmt_str += '    Number of classes: {}\n'.format(len(self.classes))
+        fmt_str += '    Number of classes: {}\n'.format(self.num_classes)
         fmt_str += '    Number of datapoints: {}\n'.format(self.__len__())
         fmt_str += '    Root Location: {}\n'.format(self.root)
         tmp = '    Transforms (if any): '
