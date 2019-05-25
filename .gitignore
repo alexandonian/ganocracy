@@ -102,5 +102,15 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# macOS
 .DS_Store
+# vscode sftp
 .vscode
+
+# GANocracy
+tutorial/log
+tutorial/data
+tutorial/samples
+tutorial/checkpoints
+
