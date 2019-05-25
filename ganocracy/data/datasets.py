@@ -453,10 +453,15 @@ def _make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
                                              compression=compression)
                 print('Image chunks chosen as {}'.format(imgs_dset.chunks))
                 imgs_dset[...] = x
-
+                if len(y.shape) > 1:
+                    maxshape = (dataset_len,) + y.shape[1:]
+                    chunks = (chunk_size,) + y.shape[1:]
+                else:
+                    maxshape = (dataset_len,)
+                    chunks = (chunk_size,)
                 labels_dset = f.create_dataset('labels', y.shape, dtype='int64',
-                                               maxshape=(dataset_len,),
-                                               chunks=(chunk_size,),
+                                               maxshape=maxshape,
+                                               chunks=chunks,
                                                compression=compression)
                 print('Label chunks chosen as {}'.format(labels_dset.chunks))
                 labels_dset[...] = y
