@@ -46,6 +46,7 @@ class EMA(object):
             for key in self.source_dict:
                 self.target_dict[key].data.copy_(self.target_dict[key].data * decay
                                                  + self.source_dict[key].data * (1 - decay))
+
     def __repr__(self):
         return (f'Source: {type(self.source).__name__}\n'
                 f'Target: {type(self.target).__name__}')
