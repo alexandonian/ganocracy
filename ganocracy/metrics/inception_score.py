@@ -301,7 +301,7 @@ def load_inception_net(config):
     return inception_model
 
 
-def prepare_inception_metrics(dataset, config, no_fid=False):
+def prepare_inception_metrics(inception_moments_file, config, no_fid=False):
     """
     This produces a function which takes in an iterator which returns a set number of samples
     and iterates until it accumulates config['num_inception_images'] images.
@@ -311,9 +311,7 @@ def prepare_inception_metrics(dataset, config, no_fid=False):
     """
     # Load metrics; this is intentionally not in a try-except loop so that
     # the script will crash here if it cannot find the Inception moments.
-    # By default, remove the "hdf5" from dataset
-    dataset = dataset.strip('_hdf5')
-    data = np.load(dataset + '_inception_moments.npz')
+    data = np.load(inception_moments_file)
     data_mu, data_sigma = data['mu'], data['sigma']
 
     # Load network
