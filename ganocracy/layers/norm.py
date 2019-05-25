@@ -218,3 +218,37 @@ class SpectralNorm(nn.Module):
     def forward(self, *args):
         self._update_u_v()
         return self.module.forward(*args)
+
+    
+# Class-conditional bn
+# output size is the number of channels, input size is for the linear layers
+# Andy's Note: this class feels messy but I'm not really sure how to clean it up
+# Suggestions welcome! (By which I mean, refactor this and make a pull request
+# if you want to make this more readable/usable).
+class ccbn(nn.Module):
+    def __init__(self, output_size, input_size, which_linear, eps=1e-5, momentum=0.1,
+                 cross_replica=False, mybn=False, norm_style='bn',):
+        super(ccbn, self).__init__()
+        self.output_size, self.input_size = output_size, input_size
+        # Prepare gain and bias layers
+        self.gain = which_linear(input_size, output_size)
+        self.bias = which_linear(input_size, output_size)
+        # epsilon to avoid dividing by 0
+        self.eps = eps
+        # Momentum
+        self.momentum = momentum
+        # Use cross-replica batchnorm?
+        self.cross_replica = cross_replica
+        # Use my batchnorm?
+        self.mybn = mybn
+        # Norm style?
+        self.norm_style = norm_style
+
+        if self.cross_replica:
+          # self.bn = SyncBN2d(output_size, eps=self.eps, momentum=self.momentum, affine=False)
+          self.bn = nn.BatchNorm2d(output_size, eps=self.eps, momentum=self.momentum, affine=False)
+        elif self.mybn:
+            self.bn = myBN(output_size, self.eps, self.momentum)
+        elif self.norm_style in ['bn', 'in']:
+            self.register_buffer('stored_mean', torch.zeros(output_size))
+            self.register_buffer('stored_var',  torch.ones(output_size))
