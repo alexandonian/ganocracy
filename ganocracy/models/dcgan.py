@@ -119,7 +119,7 @@ class Generator(nn.Module):
         return self.tanh(x)
 
 
-class _Generator(nn.Module):
+class ConditionalGenerator(nn.Module):
     res2blocks = {
         32: 3,
         64: 4,
@@ -127,25 +127,25 @@ class _Generator(nn.Module):
         256: 6,
     }
 
-    def __init__(self, dim_z=128, num_classes=2, resolution=128, G_ch=64, class_dim=128,
+    def __init__(self, dim_z=128, n_classes=2, resolution=128, G_ch=64, shared_dim=128,
                  block_func=GBlock):
-        super(Generator, self).__init__()
+        super().__init__()
 
         self.G_ch = G_ch
         self.dim_z = dim_z
-        self.class_dim = class_dim
-        self.num_classes = num_classes
+        self.n_classes = n_classes
+        self.shared_dim = shared_dim
 
         self.num_blocks = self.res2blocks[resolution]
         self.fnums = [2**i for i in range(self.num_blocks)]
         self.fnums += self.fnums[-1:]
         self.fnums = list(reversed(self.fnums))
 
-        self.class_linear = nn.Linear(num_classes, class_dim)
+        self.shared = nn.Embedding(n_classes, shared_dim)
         self.linear = nn.Linear(dim_z, G_ch * self.fnums[0] * 4**2)
 
         self.GBlocks = nn.ModuleList([
-            block_func(G_ch * in_c, G_ch * out_c, class_dim)
+            block_func(G_ch * in_c, G_ch * out_c, shared_dim)
             for in_c, out_c in zip(self.fnums, self.fnums[1:])])
 
         self.out = nn.Conv2d(G_ch * 1, 3, 3, padding=1)
@@ -155,34 +155,12 @@ class _Generator(nn.Module):
         class_embed = self.shared(y)
         return self.generate(z, class_embed)
 
-    def shared(self, y):
-        y = self.onehot(y, self.num_classes)
-        return self.class_linear(y)
-
     def generate(self, z, class_embed):
         z = self.linear(z).view(z.size(0), -1, 4, 4)
         for block in self.GBlocks:
             z = block(z, class_embed)
         return self.tanh(self.out(z))
 
-    def onehot(self, y, num_classes):
-        """Transform int labels to onehot tensor, if needed.
-
-        Args:
-            y (torch.Tensor): Class labels (either ints or onehot).
-                size: [batch_size,] or [batch_size, num_classes]
-            num_classes: Total number of classes.
-
-        Returns:
-            torch.Tensor: onehot representation of class targets.
-
-        """
-        y = y.squeeze()
-        if y.dim() == 1:
-            y = y.unsqueeze(-1)
-            y = torch.zeros((y.size(0), num_classes),
-                            device=y.device).scatter(1, y.long(), 1)
-        return y
 
 
 ####################################################################
@@ -205,15 +183,15 @@ class _Discriminator(nn.Module):
         super().__init__()
         self.D_ch = D_ch
         self.num_blocks = self.res2blocks[resolution]
-        self.ch_nums = [2**i for i in range(self.num_blocks)]
-        self.input_layer = nn.Conv2d(3, D_ch, 3, padding=1)
+        self.ch_dims = [2**i for i in range(self.num_blocks)]
+        self.input = nn.Conv2d(3, D_ch, 3, padding=1)
 
         self.DBlocks = nn.Sequential(*[
             block(D_ch * in_c, D_ch * out_c)
-            for in_c, out_c in zip(self.ch_nums, self.ch_nums[1:])
+            for in_c, out_c in zip(self.ch_dims, self.ch_dims[1:])
         ])
 
-        self.out = nn.Conv2d(D_ch * self.ch_nums[-1], 1, 3, 1, 0)
+        self.out = nn.Conv2d(D_ch * self.ch_dims[-1], 1, 3, 1, 0)
         self.act = nn.Sigmoid()
 
     def forward(self, x):
@@ -252,3 +230,39 @@ class Discriminator(nn.Module):
         x = self.out(x)
         x = self.act(x)
         return x.view(-1)
+
+
+class ProjectionDiscriminator(Discriminator):
+    """cGAN Projection discriminator."""
+
+    # Maps output resoluton to number of DBlocks.
+    res2blocks = {
+        32: 3,
+        64: 4,
+        128: 5,
+        256: 6,
+    }
+
+    def __init__(self, n_classes=1000, resolution=128, D_ch=64, block=DBlock):
+        super().__init__(resolution=resolution, D_ch=D_ch, block=block)
+
+        del self.out
+        self.embed = nn.Embedding(n_classes, self.ch_dims[-1])
+        self.linear = nn.Linear(self.ch_dims[-1], 1)
+
+    def forward(self, x, y=None):
+        h = x
+        h = self.input(x)
+        h = self.DBlocks(h)
+        h = self.act(h)
+
+        # Apply global sum pooling.
+        h = h.sum([2, 3])
+
+        # Initial class-unconditional output.
+        out = self.linear(h)
+
+        # Get projection of final featureset onto class vectors and add to evidence.
+        if y is not None:
+            out = out + torch.sum(self.embed(y) * h, 1, keepdim=True)
+        return out.view(-1)
