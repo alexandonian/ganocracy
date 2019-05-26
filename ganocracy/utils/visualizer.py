@@ -23,12 +23,12 @@ def visualize_data(data, num_samples=64, figsize=(15, 15), title='Real Images'):
 
 
 def visualize_samples(samples, figsize=(15, 15), title='Samples',
-                      padding=5, normalize=True):
+                      nrow=8, padding=5, normalize=True):
     # Plot the real images
     plt.figure(figsize=figsize)
     plt.axis("off")
     plt.title(title)
-    im = vutils.make_grid(samples, padding=padding, normalize=normalize).cpu()
+    im = vutils.make_grid(samples, nrow=nrow, padding=padding, normalize=normalize).cpu()
     plt.imshow(np.transpose(im, (1, 2, 0)))
 
 
@@ -64,7 +64,7 @@ def interp(x0, x1, num_midpoints, device='cuda'):
     return torch.lerp(x0, x1, lerp)
 
 
-def truncated_z_sample(batch_size, dim_z, truncation=1, seed=None):
+def truncated_z_sample(batch_size, dim_z, truncation=1.0, seed=None, device='cuda'):
     state = None if seed is None else np.random.RandomState(seed)
     values = truncnorm.rvs(-2, 2, size=(batch_size, dim_z), random_state=state)
-    return truncation * values
+    return torch.Tensor(float(truncation) * values).to(device)
