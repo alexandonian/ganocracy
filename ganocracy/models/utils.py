@@ -84,3 +84,30 @@ def default_ortho(model, strength=1e-4, blacklist=[]):
             grad = (2 * torch.mm(torch.mm(w, w.t())
                                  - torch.eye(w.shape[0], device=w.device), w))
             param.grad.data += strength * grad.view(param.shape)
+
+
+def hook_sizes(G, inputs, verbose=True):
+
+    # Hook the output sizes
+    sizes = []
+
+    def hook_output_size(module, input, output):
+        sizes.append(output.shape)
+
+    names, mods = zip(*[(name, p) for name, p in G.named_modules() if list(p.parameters()) and (not p._modules)])
+    for m in mods:
+        m.register_forward_hook(hook_output_size)
+
+    with torch.no_grad():
+        output = G(*inputs)
+
+    if verbose:
+        max_len = max(max([len(n) for n in names]), len('Input'))
+
+        for i, input in enumerate(inputs):
+            print(f'Input {i:<{max_len}} has shape: {input.shape}')
+
+        for name, s in zip(names, sizes):
+            print(f'Layer {name:<{max_len}} has shape: {s}')
+
+    return output, names, sizes
