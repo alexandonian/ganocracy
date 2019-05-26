@@ -62,7 +62,7 @@ class Generator(nn.Module):
                  G_lr=5e-5, G_B1=0.0, G_B2=0.999, adam_eps=1e-8,
                  BN_eps=1e-5, SN_eps=1e-12, G_mixed_precision=False, G_fp16=False,
                  G_init='ortho', skip_init=False, no_optim=False,
-                 G_param='SN', norm_style='bn',
+                 G_param='SN', norm_style='bn', verbose=False,
                  **kwargs):
         super(Generator, self).__init__()
         # Channel width mulitplier
@@ -103,6 +103,8 @@ class Generator(nn.Module):
         self.SN_eps = SN_eps
         # fp16?
         self.fp16 = G_fp16
+        # Print out model information during init?
+        self.verbose = verbose
         # Architecture dict
         self.arch = G_arch(self.ch, self.attention)[resolution]
 
@@ -167,7 +169,8 @@ class Generator(nn.Module):
 
             # If attention on this block, attach it to the end
             if self.arch['attention'][self.arch['resolution'][index]]:
-                print('Adding attention layer in G at resolution %d' % self.arch['resolution'][index])
+                if self.verbose:
+                    print('Adding attention layer in G at resolution %d' % self.arch['resolution'][index])
                 self.blocks[-1] += [layers.Attention(self.arch['out_channels'][index], self.which_conv)]
 
         # Turn self.blocks into a ModuleList so that it's all properly registered.
@@ -191,7 +194,8 @@ class Generator(nn.Module):
             return
         self.lr, self.B1, self.B2, self.adam_eps = G_lr, G_B1, G_B2, adam_eps
         if G_mixed_precision:
-            print('Using fp16 adam in G...')
+            if self.verbose:
+                print('Using fp16 adam in G...')
             import utils
             self.optim = utils.Adam16(params=self.parameters(), lr=self.lr,
                                       betas=(self.B1, self.B2), weight_decay=0,
@@ -221,7 +225,8 @@ class Generator(nn.Module):
                 else:
                     print('Init style not recognized...')
                 self.param_count += sum([p.data.nelement() for p in module.parameters()])
-        print('Param count for G''s initialized parameters: %d' % self.param_count)
+        if self.verbose:
+            print('Param count for G''s initialized parameters: %d' % self.param_count)
 
     # Note on this forward function: we pass in a y vector which has
     # already been passed through G.shared to enable easy class-wise
@@ -288,7 +293,7 @@ class Discriminator(nn.Module):
                  num_D_SVs=1, num_D_SV_itrs=1, D_activation=nn.ReLU(inplace=False),
                  D_lr=2e-4, D_B1=0.0, D_B2=0.999, adam_eps=1e-8,
                  SN_eps=1e-12, output_dim=1, D_mixed_precision=False, D_fp16=False,
-                 D_init='ortho', skip_init=False, D_param='SN', **kwargs):
+                 D_init='ortho', skip_init=False, D_param='SN', verbose=False, **kwargs):
         super(Discriminator, self).__init__()
         # Width multiplier
         self.ch = D_ch
@@ -312,6 +317,8 @@ class Discriminator(nn.Module):
         self.SN_eps = SN_eps
         # Fp16?
         self.fp16 = D_fp16
+        # Print model info during init?
+        self.verbose = verbose
         # Architecture
         self.arch = D_arch(self.ch, self.attention)[resolution]
 
@@ -342,7 +349,8 @@ class Discriminator(nn.Module):
                                            downsample=(nn.AvgPool2d(2) if self.arch['downsample'][index] else None))]]
             # If attention on this block, attach it to the end
             if self.arch['attention'][self.arch['resolution'][index]]:
-                print('Adding attention layer in D at resolution %d' % self.arch['resolution'][index])
+                if self.verbose:
+                    print('Adding attention layer in D at resolution %d' % self.arch['resolution'][index])
                 self.blocks[-1] += [layers.Attention(self.arch['out_channels'][index],
                                                      self.which_conv)]
         # Turn self.blocks into a ModuleList so that it's all properly registered.
@@ -360,7 +368,8 @@ class Discriminator(nn.Module):
         # Set up optimizer
         self.lr, self.B1, self.B2, self.adam_eps = D_lr, D_B1, D_B2, adam_eps
         if D_mixed_precision:
-            print('Using fp16 adam in D...')
+            if self.verbose:
+                print('Using fp16 adam in D...')
             import utils
             self.optim = utils.Adam16(params=self.parameters(), lr=self.lr,
                                       betas=(self.B1, self.B2), weight_decay=0, eps=self.adam_eps)
@@ -387,7 +396,8 @@ class Discriminator(nn.Module):
                 else:
                     print('Init style not recognized...')
                 self.param_count += sum([p.data.nelement() for p in module.parameters()])
-        print('Param count for D''s initialized parameters: %d' % self.param_count)
+        if self.verbose:
+            print('Param count for D''s initialized parameters: %d' % self.param_count)
 
     def forward(self, x, y=None):
         # Stick x into h for cleaner for loops without flow control
