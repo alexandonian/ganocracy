@@ -10,7 +10,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.nn import Parameter as P
 
-from ..  import layers
+from .. import layers
 
 
 # Architectures for G
@@ -453,19 +453,19 @@ class G_D(nn.Module):
                     return D_out
 
 
-root = '/root/ganocracy/ganocracy/pretrained/'
+root = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'weights')
 model_weights = {
     'imagenet': {
         128: {
-            'G': os.path.join(root, '100k',  'G.pth'),
+            'G': os.path.join(root, '100k', 'G.pth'),
             'G_ema': os.path.join(root, '100k', 'G_ema.pth'),
-            'state_dict': os.path.join(root,  '100k', 'state_dict.pth'),
+            'state_dict': os.path.join(root, '100k', 'state_dict.pth'),
         }
     }
 }
 
-tfhub_weights  = {
-    'imagenet':  {
+tfhub_weights = {
+    'imagenet': {
         128: os.path.join(root, 'biggan-128.pth'),
         256: os.path.join(root, 'biggan-256.pth'),
         512: os.path.join(root, 'biggan-512.pth'),
@@ -473,29 +473,30 @@ tfhub_weights  = {
 }
 
 
-
 def BigGAN(resolution=256, pretrained='imagenet', load_ema=True, tfhub=True):
-    
+
     attn = {128: '64', 256: '128', 512: '64'}
     dim_z = {128: 120, 256: 140, 512: 128}
-    config = {'G_param': 'SN', 'D_param': 'SN', 
-           'G_ch': 96, 'D_ch': 96, 
-           'D_wide': True, 'G_shared': True, 
-           'shared_dim': 128, 'dim_z': dim_z[resolution], 
-           'hier': True, 'cross_replica': False, 
-           'mybn': False, 'G_activation': nn.ReLU(inplace=True),
-           'G_attn': attn[resolution],
-           'norm_style': 'bn',
-           'G_init': 'ortho', 'skip_init': True, 'no_optim': True,
-           'G_fp16': False, 'G_mixed_precision': False,
-           'accumulate_stats': False, 'num_standing_accumulations': 16, 
-           'G_eval_mode': True,
-           'BN_eps': 1e-04, 'SN_eps': 1e-04, 
-           'num_G_SVs': 1, 'num_G_SV_itrs': 1, 'resolution': resolution, 
-           'n_classes': 1000}
+    config = {
+        'G_param': 'SN', 'D_param': 'SN',
+        'G_ch': 96, 'D_ch': 96,
+        'D_wide': True, 'G_shared': True,
+        'shared_dim': 128, 'dim_z': dim_z[resolution],
+        'hier': True, 'cross_replica': False,
+        'mybn': False, 'G_activation': nn.ReLU(inplace=True),
+        'G_attn': attn[resolution],
+        'norm_style': 'bn',
+        'G_init': 'ortho', 'skip_init': True, 'no_optim': True,
+        'G_fp16': False, 'G_mixed_precision': False,
+        'accumulate_stats': False, 'num_standing_accumulations': 16,
+        'G_eval_mode': True,
+        'BN_eps': 1e-04, 'SN_eps': 1e-04,
+        'num_G_SVs': 1, 'num_G_SV_itrs': 1, 'resolution': resolution,
+        'n_classes': 1000
+    }
 
-    if  tfhub:
-        weights =  torch.load(tfhub_weights[pretrained][resolution])
+    if tfhub:
+        weights = torch.load(tfhub_weights[pretrained][resolution])
         G = Generator(**config)
         G.load_state_dict(weights, strict=False)
         G.eval()
