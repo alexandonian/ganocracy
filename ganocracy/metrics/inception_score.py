@@ -271,7 +271,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
     return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0)
 
 
-def load_inception_net(config):
+def load_inception_net(gpu=None, distributed=None):
     """Load and wrap the Inception model.
 
     Args:
@@ -284,18 +284,18 @@ def load_inception_net(config):
     """
     inception_model = inception_v3(pretrained=True, transform_input=False)
     inception_model = WrapInception(inception_model.eval()).cuda()
-    if config['distributed']:
-        if config['gpu'] is not None:
-            torch.cuda.set_device(config['gpu'])
-            inception_model.cuda(config['gpu'])
+    if distributed:
+        if gpu is not None:
+            torch.cuda.set_device(gpu)
+            inception_model.cuda(gpu)
         else:
             inception_model.cuda()
             inception_model = torch.nn.parallel.DistributedDataParallel(
                 inception_model
             )
-    elif config['gpu'] is not None:
-        torch.cuda.set_device(config['gpu'])
-        inception_model = inception_model.cuda(config['gpu'])
+    elif gpu is not None:
+        torch.cuda.set_device(gpu)
+        inception_model = inception_model.cuda(gpu)
     else:
         inception_model = torch.nn.DataParallel(inception_model).cuda()
     return inception_model
@@ -315,7 +315,7 @@ def prepare_inception_metrics(inception_moments_file, config, no_fid=False):
     data_mu, data_sigma = data['mu'], data['sigma']
 
     # Load network
-    net = load_inception_net(config)
+    net = load_inception_net(gpu=config['gpu'], distributed=config['distributed'])
 
     def get_inception_metrics(sample, num_inception_images, num_splits=10,
                               prints=True, use_torch=True):
@@ -348,7 +348,11 @@ def prepare_inception_metrics(inception_moments_file, config, no_fid=False):
 
 
 def calculate_inception_moments(dataloader, root, name, gpu=None, device='cuda'):
-    net = load_inception_net({'distributed': False, 'gpu': gpu})
+    filename = os.path.join(root, name + '_inception_moments.npz')
+    if os.path.exists(filename):
+        print('{} found!'.format(filename))
+        return filename
+    net = load_inception_net(distributed=False, gpu=gpu)
     pool, logits, labels = [], [], []
     for i, (x, y) in enumerate(tqdm(dataloader)):
         x = x.to(device)
