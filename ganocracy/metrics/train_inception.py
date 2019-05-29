@@ -26,7 +26,7 @@ model_names = sorted(name for name in models.__dict__
 
 parser = argparse.ArgumentParser(description='PyTorch Training')
 parser.add_argument('--data', metavar='DIR', help='path to dataset',
-                    default='/data/vision/oliva/scratch/datasets/Places365')
+                    default='data')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='inception_v3',
                     choices=model_names,
                     help='model architecture: ' +
