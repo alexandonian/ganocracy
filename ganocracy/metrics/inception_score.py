@@ -271,7 +271,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
     return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0)
 
 
-def load_inception_net(gpu=None, distributed=None):
+def load_inception_net(gpu=None, distributed=None, device='cuda'):
     """Load and wrap the Inception model.
 
     Args:
@@ -283,7 +283,7 @@ def load_inception_net(gpu=None, distributed=None):
         (nn.Module): Wrapped inception model.
     """
     inception_model = inception_v3(pretrained=True, transform_input=False)
-    inception_model = WrapInception(inception_model.eval()).cuda()
+    inception_model = WrapInception(inception_model.eval()).to(device)
     if distributed:
         if gpu is not None:
             torch.cuda.set_device(gpu)
@@ -297,7 +297,7 @@ def load_inception_net(gpu=None, distributed=None):
         torch.cuda.set_device(gpu)
         inception_model = inception_model.cuda(gpu)
     else:
-        inception_model = torch.nn.DataParallel(inception_model).cuda()
+        inception_model = torch.nn.DataParallel(inception_model).to(device)
     return inception_model
 
 
@@ -352,7 +352,7 @@ def calculate_inception_moments(dataloader, root, name, gpu=None, device='cuda')
     if os.path.exists(filename):
         print('{} found!'.format(filename))
         return filename
-    net = load_inception_net(distributed=False, gpu=gpu)
+    net = load_inception_net(distributed=False, gpu=gpu, device=device)
     pool, logits, labels = [], [], []
     for i, (x, y) in enumerate(tqdm(dataloader)):
         x = x.to(device)
