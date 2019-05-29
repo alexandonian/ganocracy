@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import shutil
 from scipy.stats import truncnorm
 
 import torch
@@ -111,3 +112,13 @@ def hook_sizes(G, inputs, verbose=True):
             print(f'Layer {name:<{max_len}} has shape: {s}')
 
     return output, names, sizes
+
+
+def save_checkpoint(state, is_best_IS, is_best_FID, filename='checkpoint.pth.tar'):
+    torch.save(state, filename)
+    if is_best_IS:
+        fname = filename.rstrip('.pth.tar') + '_best_IS' + '.pth.tar'
+        shutil.copyfile(filename, fname)
+    if is_best_FID:
+        fname = filename.rstrip('.pth.tar') + '_best_FID' + '.pth.tar'
+        shutil.copyfile(filename, fname)
