@@ -479,9 +479,9 @@ model_weights = {
 root_url = 'http://ganocracy.csail.mit.edu/models'
 tfhub_urls = {
     'imagenet': {
-        128: os.path.join(root, 'tfbiggan_128-13f17ff2.pth'),
-        256: os.path.join(root, 'tfbiggan_256-a4cf3382.pth'),
-        512: os.path.join(root, 'tfbiggan_512-447bfb81.pth'),
+        128: os.path.join(root_url, 'tfbiggan_128-13f17ff2.pth'),
+        256: os.path.join(root_url, 'tfbiggan_256-a4cf3382.pth'),
+        512: os.path.join(root_url, 'tfbiggan_512-447bfb81.pth'),
     }
 }
 
@@ -510,7 +510,7 @@ def BigGAN(resolution=256, pretrained='imagenet', load_ema=True, tfhub=True):
 
     if tfhub and pretrained is not None:
         url = tfhub_urls[pretrained][resolution]
-        weights = torch.load(torch.hub.load_state_dict_from_url(url))
+        weights = torch.hub.load_state_dict_from_url(url)
         G = Generator(**config)
         G.load_state_dict(weights, strict=False)
         G.eval()
