@@ -523,10 +523,9 @@ def get_dataset(name, root_dir=None, resolution=128, dataset_type='ImageFolder',
         hdf5_file = os.path.join(root_dir, hdf5_name)
         if not os.path.exists(hdf5_file):
             if download:
-                url = data_urls[hdf5_name]['url']
-                md5 = data_urls[hdf5_name]['md5']
+                d = data_urls['hdf5'][hdf5_name]
+                url, md5 = d['url'], d['md5']
                 torchvision.datasets.utils.download_url(url, root_dir, filename=hdf5_name, md5=md5)
-                load_data_from_url(data_urls[hdf5_name])
             raise ValueError('Cannot find hdf5 file. You need to set=download it, or create if yourself!')
 
         def target_transform(x):
