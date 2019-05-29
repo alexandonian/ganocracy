@@ -12,6 +12,8 @@ IS/FID code. You *must* use the TF model if you wish to report and compare
 numbers. This code tends to produce IS values that are 5-10% lower than
 those obtained through TF.
 
+Adapted from https://github.com/ajbrock/BigGAN-PyTorch.
+
 """
 import os
 import numpy as np

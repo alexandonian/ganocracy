@@ -1,3 +1,12 @@
+"""biggan.py
+
+Implements BigGAN architecture from
+
+Large Scale GAN Training for High Fidelity Natural Image Synthesis by Andrew Brock, Jeff Donahue, and Karen Simonyan.
+
+Adapted from https://github.com/ajbrock/BigGAN-PyTorch.
+
+"""
 import os
 import numpy as np
 import math
@@ -13,9 +22,102 @@ from torch.nn import Parameter as P
 from .. import layers
 
 
+# Generator blocks
+# Note that this class assumes the kernel size and padding (and any other
+# settings) have been selected in the main generator module and passed in
+# through the which_conv arg. Similar rules apply with which_bn (the input
+# size [which is actually the number of channels of the conditional info] must
+# be preselected)
+class GBlock(nn.Module):
+    def __init__(self, in_channels, out_channels,
+                 which_conv=nn.Conv2d, which_bn=layers.bn, activation=None,
+                 upsample=None):
+        super(GBlock, self).__init__()
+
+        self.in_channels, self.out_channels = in_channels, out_channels
+        self.which_conv, self.which_bn = which_conv, which_bn
+        self.activation = activation
+        self.upsample = upsample
+        # Conv layers
+        self.conv1 = self.which_conv(self.in_channels, self.out_channels)
+        self.conv2 = self.which_conv(self.out_channels, self.out_channels)
+        self.learnable_sc = in_channels != out_channels or upsample
+        if self.learnable_sc:
+            self.conv_sc = self.which_conv(in_channels, out_channels,
+                                           kernel_size=1, padding=0)
+        # Batchnorm layers
+        self.bn1 = self.which_bn(in_channels)
+        self.bn2 = self.which_bn(out_channels)
+        # upsample layers
+        self.upsample = upsample
+
+    def forward(self, x, y):
+        h = self.activation(self.bn1(x, y))
+        if self.upsample:
+            h = self.upsample(h)
+            x = self.upsample(x)
+        h = self.conv1(h)
+        h = self.activation(self.bn2(h, y))
+        h = self.conv2(h)
+        if self.learnable_sc:
+            x = self.conv_sc(x)
+        return h + x
+
+
+# Residual block for the discriminator
+class DBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, which_conv=layers.SNConv2d, wide=True,
+                 preactivation=False, activation=None, downsample=None,):
+        super(DBlock, self).__init__()
+        self.in_channels, self.out_channels = in_channels, out_channels
+        # If using wide D (as in SA-GAN and BigGAN), change the channel pattern
+        self.hidden_channels = self.out_channels if wide else self.in_channels
+        self.which_conv = which_conv
+        self.preactivation = preactivation
+        self.activation = activation
+        self.downsample = downsample
+
+        # Conv layers
+        self.conv1 = self.which_conv(self.in_channels, self.hidden_channels)
+        self.conv2 = self.which_conv(self.hidden_channels, self.out_channels)
+        self.learnable_sc = True if (in_channels != out_channels) or downsample else False
+        if self.learnable_sc:
+            self.conv_sc = self.which_conv(in_channels, out_channels,
+                                           kernel_size=1, padding=0)
+
+    def shortcut(self, x):
+        if self.preactivation:
+            if self.learnable_sc:
+                x = self.conv_sc(x)
+            if self.downsample:
+                x = self.downsample(x)
+        else:
+            if self.downsample:
+                x = self.downsample(x)
+            if self.learnable_sc:
+                x = self.conv_sc(x)
+        return x
+
+    def forward(self, x):
+        if self.preactivation:
+            # h = self.activation(x) # NOT TODAY SATAN
+            # Andy's note: This line *must* be an out-of-place ReLU or it
+            #              will negatively affect the shortcut connection.
+            h = F.relu(x)
+        else:
+            h = x
+        h = self.conv1(h)
+        h = self.conv2(self.activation(h))
+        if self.downsample:
+            h = self.downsample(h)
+
+        return h + self.shortcut(x)
+
 # Architectures for G
 # Attention is passed in in the format '32_64' to mean applying an attention
 # block at both resolution 32x32 and 64x64. Just '64' will apply at 64x64.
+
+
 def G_arch(ch=64, attention='64', ksize='333333', dilation='111111'):
     arch = {}
     arch[512] = {'in_channels': [ch * item for item in [16, 16, 8, 8, 4, 2, 1]],
