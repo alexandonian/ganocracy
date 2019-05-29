@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn import init
 
 from ganocracy import layers
 
@@ -63,6 +64,7 @@ class GBlock(nn.Module):
             x = self.bn(x, y)
         else:
             x = self.bn(x)
+        x = self.bn(x) if y is None else self.bn(x, y)
         x = self.act(x)
         return x
 
@@ -94,10 +96,11 @@ class Generator(nn.Module):
     # Maps output resoluton to number of GBlocks.
     res2blocks = {32: 3, 64: 4, 128: 5, 256: 6, 512: 7}
 
-    def __init__(self, dim_z=100, resolution=64, G_ch=64, block=GBasicBlock):
+    def __init__(self, dim_z=100, resolution=64, G_ch=64, block=GBasicBlock, init='N02'):
         super().__init__()
 
         self.G_ch = G_ch
+        self.init = init
         self.dim_z = dim_z
 
         self.num_blocks = self.res2blocks[resolution]
@@ -110,6 +113,20 @@ class Generator(nn.Module):
 
         self.out = nn.ConvTranspose2d(self.ch_dims[-1], 3, 4, 2, 1)  # RGB image has 3 channels
         self.tanh = nn.Tanh()                                        # "Squashes" out to be in range[-1, 1]
+
+        self.init_weights()
+
+    def init_weights(self):
+        for module in self.modules():
+            if (isinstance(module, nn.Conv2d)
+                or isinstance(module, nn.Linear)
+                or isinstance(module, nn.Embedding)):
+                if self.init == 'ortho':
+                    init.orthogonal_(module.weight)
+                elif self.init == 'N02':
+                    init.normal_(module.weight, 0, 0.02)
+                elif self.init in ['glorot', 'xavier']:
+                    init.xavier_uniform_(module.weight)
 
     def forward(self, x):
         x = x.view(x.size(0), -1, 1, 1)
@@ -128,10 +145,11 @@ class ConditionalGenerator(nn.Module):
     }
 
     def __init__(self, dim_z=128, n_classes=2, resolution=128, G_ch=64, shared_dim=128,
-                 block_func=GBlock):
+                 block_func=GBlock, init='N02'):
         super().__init__()
 
         self.G_ch = G_ch
+        self.init = init
         self.dim_z = dim_z
         self.n_classes = n_classes
         self.shared_dim = shared_dim
@@ -151,6 +169,8 @@ class ConditionalGenerator(nn.Module):
         self.out = nn.Conv2d(G_ch * 1, 3, 3, padding=1)
         self.tanh = nn.Tanh()
 
+        self.init_weights()
+
     def forward(self, z, y):
         class_embed = self.shared(y)
         return self.generate(z, class_embed)
@@ -161,6 +181,17 @@ class ConditionalGenerator(nn.Module):
             z = block(z, class_embed)
         return self.tanh(self.out(z))
 
+    def init_weights(self):
+        for module in self.modules():
+            if (isinstance(module, nn.Conv2d)
+                or isinstance(module, nn.Linear)
+                    or isinstance(module, nn.Embedding)):
+                if self.init == 'ortho':
+                    init.orthogonal_(module.weight)
+                elif self.init == 'N02':
+                    init.normal_(module.weight, 0, 0.02)
+                elif self.init in ['glorot', 'xavier']:
+                    init.xavier_uniform_(module.weight)
 
 
 ####################################################################
@@ -207,9 +238,10 @@ class Discriminator(nn.Module):
     # Maps output resoluton to number of DBlocks.
     res2blocks = {32: 3, 64: 4, 128: 5, 256: 6, 512: 7}
 
-    def __init__(self, resolution=128, D_ch=64, block=DBlock):
+    def __init__(self, resolution=128, D_ch=64, block=DBlock, n_classes=1000):
         super().__init__()
         self.D_ch = D_ch
+        self.n_classess = n_classes
         self.num_blocks = self.res2blocks[resolution]
         self.ch_dims = [D_ch * (2**i) for i in range(self.num_blocks)]
         self.input = nn.Sequential(
@@ -224,7 +256,7 @@ class Discriminator(nn.Module):
         self.out = nn.Conv2d(self.ch_dims[-1], 1, 4, 1, 0)
         self.act = nn.Sigmoid()
 
-    def forward(self, x):
+    def forward(self, x, y=None):
         x = self.input(x)
         x = self.DBlocks(x)
         x = self.out(x)
@@ -249,10 +281,11 @@ class ProjectionDiscriminator(Discriminator):
         del self.out
         self.embed = nn.Embedding(n_classes, self.ch_dims[-1])
         self.linear = nn.Linear(self.ch_dims[-1], 1)
+        self.act = nn.ReLU()
 
     def forward(self, x, y=None):
         h = x
-        h = self.input(x)
+        h = self.input(h)
         h = self.DBlocks(h)
         h = self.act(h)
 
