@@ -12,6 +12,7 @@ from PIL import Image
 import torch
 import torch.hub
 import torch.utils.data as data
+import torchvision
 from tqdm import tqdm
 
 from . import transforms
@@ -24,6 +25,16 @@ except AttributeError:
 
 ROOT_URL = 'http://ganocracy.csail.mit.edu/data/'
 data_urls = {
+    'hdf5': {
+        'BuildingsHQ-64.hdf5': {
+            'url': os.path.join(ROOT_URL, 'BuildingsHQ-64.hdf5'),
+            'md5': ','
+        },
+        'BuildingsHQ-128.hdf5': {
+            'url': os.path.join(ROOT_URL, 'BuildingsHQ-128.hdf5'),
+            'md5': 'b2c0f7129d6dd117d9dda2a7098870f1'
+        }
+    },
     'celeba': {
         'tar': os.path.join(ROOT_URL, 'celeba-054b22a6.tar.gz')
     },
@@ -345,26 +356,24 @@ def hdf5_transform(img):
 
 class ImageHDF5(data.Dataset):
 
-    def __init__(self, root, transform=hdf5_transform, target_transform=None,
-                 load_in_mem=False, train=True, download=False, validate_seed=0,
-                 val_split=0, **kwargs):  # last four are dummies
+    def __init__(self, hdf5_file, transform=hdf5_transform, target_transform=None,
+                 load_in_mem=False, train=True, download=True):
 
-        self.root = root
+        self.hdf5_file = hdf5_file
+        # Set the transforms here.
+        self.transform = transform
         self.target_transform = target_transform
-        with h5.File(root, 'r') as f:
+        with h5.File(hdf5_file, 'r') as f:
             self.num_imgs = len(f['labels'])
             self.num_classes = len(np.unique(f['labels'][:]))
-
-        # Set the transform here.
-        self.transform = transform
 
         # Load the entire dataset into memory?
         self.load_in_mem = load_in_mem
 
         # If loading into memory, do so now.
         if self.load_in_mem:
-            print('Loading {} into memory...'.format(root))
-            with h5.File(root, 'r') as f:
+            print('Loading {} into memory...'.format(hdf5_file))
+            with h5.File(hdf5_file, 'r') as f:
                 self.data = f['imgs'][:]
                 self.labels = f['labels'][:]
 
@@ -383,16 +392,17 @@ class ImageHDF5(data.Dataset):
 
         # Else load it from disk
         else:
-            with h5.File(self.root, 'r') as f:
+            with h5.File(self.hdf5_file, 'r') as f:
                 img = f['imgs'][index]
                 target = f['labels'][index]
-
         if self.transform is not None:
             img = self.transform(img)
 
         if self.target_transform is not None:
             target = self.target_transform(target)
 
+        if target is None:
+            target = 0
         return img, int(target)
 
     def __len__(self):
@@ -402,7 +412,7 @@ class ImageHDF5(data.Dataset):
         fmt_str = 'Dataset ' + self.__class__.__name__ + '\n'
         fmt_str += '    Number of classes: {}\n'.format(self.num_classes)
         fmt_str += '    Number of datapoints: {}\n'.format(self.__len__())
-        fmt_str += '    Root Location: {}\n'.format(self.root)
+        fmt_str += '    HDF5 File: {}\n'.format(self.hdf5_file)
         tmp = '    Transforms (if any): '
         fmt_str += '{0}{1}\n'.format(tmp, self.transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
         tmp = '    Target Transforms (if any): '
@@ -474,7 +484,61 @@ def _make_hdf5(dataloader, root, filename, chunk_size=500, compression=False):
                 f['labels'][-y.shape[0]:] = y
 
 
-def get_dataset(name, root_dir=None, resolution=128, filetype='tar'):
+def get_dataset(name, root_dir=None, resolution=128, dataset_type='ImageFolder',
+                download=True, split='train', transform=None, target_transform=None,
+                load_in_mem=False):
+    if name == 'Custom':
+        pass
+
+    if dataset_type == 'ImageFolder':
+        # Get torchivision dataset class for desired dataset.
+        dataset_func = getattr(torchvision.datasets, name)
+
+        if name in ['CIFAR10', 'CIFAR100']:
+            kwargs = {'train': True if split == 'train' else False}
+        else:
+            kwargs = {'split': split}
+        if name == 'CelebA':
+            def tf(x):
+                return 0 if target_transform is None else target_transform
+            kwargs = {**kwargs, 'target_transform': tf}
+
+        if transform is None:
+            transform = transforms.Compose([
+                transforms.CenterCropLongEdge(),
+                transforms.Resize(resolution),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5),
+                                     (0.5, 0.5, 0.5))])
+        kwargs = {**kwargs,
+                  'download': download,
+                  'transform': transform}
+
+        # Create dataset class based on config selection.
+        dataset = dataset_func(root=root_dir, **kwargs)
+
+    elif dataset_type == 'ImageHDF5':
+
+        hdf5_name = '{}-{}.hdf5'.format(name, resolution)
+        hdf5_file = os.path.join(root_dir, hdf5_name)
+        if not os.path.exists(hdf5_file):
+            if download:
+                url = data_urls[hdf5_name]['url']
+                md5 = data_urls[hdf5_name]['md5']
+                torchvision.datasets.utils.download_url(url, root_dir, filename=hdf5_name, md5=md5)
+                load_data_from_url(data_urls[hdf5_name])
+            raise ValueError('Cannot find hdf5 file. You need to set=download it, or create if yourself!')
+
+        def target_transform(x):
+            return 0 if name == 'CelebA' else None
+
+        dataset = ImageHDF5(hdf5_file, load_in_mem=load_in_mem,
+                            target_transform=target_transform)
+
+    return dataset
+
+
+def get_dataset_old():
     if filetype == 'tar':
         url = data_urls[name]['tar']
         data_dir = load_data_from_url(url, root_dir)
