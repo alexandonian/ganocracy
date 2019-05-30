@@ -14,7 +14,7 @@ When GANs generate images, are they simply reproducing memorized pixel patterns,
 
 GANdissect [[GitHub](https://github.com/CSAILVision/gandissect), [paper](https://arxiv.org/pdf/1811.10597.pdf)] is an analytic framework for visualizing the internal representations of a GAN generator at the unit-, object-, and scene-level.
 
-![GANdissect unit visualization](/Users/kvgallagher/PycharmProjects/ganocracy/gandissect/assets/GANdissect.jpg)
+![GANdissect unit visualization](gandissect/assets/GANdissect.jpg)
 <sup>Image credit: Bau, David, et al. ["GAN Dissection: Visualizing and Understanding Generative Adversarial Networks."](https://arxiv.org/pdf/1811.10597.pdf) arXiv preprint arXiv:1811.10597 (2018).</sup>
 
 GANdissect helps shed light on what representations GANs are learning across layers, models, and datasets, and we can use that knowledge to compare, improve, and better control GAN performance.
@@ -22,7 +22,11 @@ GANdissect helps shed light on what representations GANs are learning across lay
 ###2. [Training a GAN](gan_training)
 by: [Alex Andonian](https://www.alexandonian.com/), MIT
 
-![DCGAN training progress](/Users/kvgallagher/PycharmProjects/ganocracy/assets/GANdissect.jpg)
+<video width="320" height="240" controls>
+  <source src="gan_training/assets/dcgan_progress.mp4" type="video/mp4">
+</video>
+
+![DCGAN training progress](gan_training/assets/dcgan_progress.gif)
 <sup>Image credit: Alex Andonian</sup>
 
 How do you actually build and train a GAN? What are best practices, tips, and tricks to help simplify the process? 

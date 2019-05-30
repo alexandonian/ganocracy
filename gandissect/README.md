@@ -6,6 +6,12 @@ This tutorial branch of GAN Dissect can be cloned via
 git clone --branch tutorial https://github.com/CSAILVision/gandissect.git
 ```
 
+If you do not have git installed on your local machine, you can download the branch as a ZIP file with
+
+```
+wget https://github.com/CSAILVision/gandissect/archive/tutorial.zip
+```
+
 ## Setup
 
 To install everything needed from this repo, have `conda` available (`conda` installation instructions can be found [here](http://ganocracy.csail.mit.edu/tutorial/setup.html)),
