@@ -32,6 +32,15 @@ def visualize_samples(samples, figsize=(15, 15), title='Samples',
     plt.imshow(np.transpose(im, (1, 2, 0)))
 
 
+def smooth_data(data, amount=1.0):
+    if not amount > 0.0:
+        return data
+    data_len = len(data)
+    ksize = int(amount * (data_len // 2))
+    kernel = np.ones(ksize) / ksize
+    return np.convolve(data, kernel, mode='same')
+
+
 def _save_sample(G, fixed_noise, filename, nrow=8, padding=2, normalize=True):
     fake_image = G(fixed_noise).detach()
     vutils.save_image(fake_image, filename, nrow=nrow, padding=padding, normalize=normalize)
