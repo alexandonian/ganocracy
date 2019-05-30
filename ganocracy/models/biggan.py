@@ -261,13 +261,13 @@ class Generator(nn.Module):
         # while the inner loop is over a given block
         self.blocks = []
         for index in range(len(self.arch['out_channels'])):
-            self.blocks += [[layers.GBlock(in_channels=self.arch['in_channels'][index],
-                                           out_channels=self.arch['out_channels'][index],
-                                           which_conv=self.which_conv,
-                                           which_bn=self.which_bn,
-                                           activation=self.activation,
-                                           upsample=(functools.partial(F.interpolate, scale_factor=2)
-                                                     if self.arch['upsample'][index] else None))]]
+            self.blocks += [[GBlock(in_channels=self.arch['in_channels'][index],
+                                    out_channels=self.arch['out_channels'][index],
+                                    which_conv=self.which_conv,
+                                    which_bn=self.which_bn,
+                                    activation=self.activation,
+                                    upsample=(functools.partial(F.interpolate, scale_factor=2)
+                                              if self.arch['upsample'][index] else None))]]
 
             # If attention on this block, attach it to the end
             if self.arch['attention'][self.arch['resolution'][index]]:
@@ -444,13 +444,13 @@ class Discriminator(nn.Module):
         # to be over blocks at a given resolution (resblocks and/or self-attention)
         self.blocks = []
         for index in range(len(self.arch['out_channels'])):
-            self.blocks += [[layers.DBlock(in_channels=self.arch['in_channels'][index],
-                                           out_channels=self.arch['out_channels'][index],
-                                           which_conv=self.which_conv,
-                                           wide=self.D_wide,
-                                           activation=self.activation,
-                                           preactivation=(index > 0),
-                                           downsample=(nn.AvgPool2d(2) if self.arch['downsample'][index] else None))]]
+            self.blocks += [[DBlock(in_channels=self.arch['in_channels'][index],
+                                    out_channels=self.arch['out_channels'][index],
+                                    which_conv=self.which_conv,
+                                    wide=self.D_wide,
+                                    activation=self.activation,
+                                    preactivation=(index > 0),
+                                    downsample=(nn.AvgPool2d(2) if self.arch['downsample'][index] else None))]]
             # If attention on this block, attach it to the end
             if self.arch['attention'][self.arch['resolution'][index]]:
                 if self.verbose:

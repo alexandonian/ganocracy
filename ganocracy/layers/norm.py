@@ -10,6 +10,7 @@ from torch.nn import Parameter
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import Parameter as P
 
 
 def proj(x, y):
