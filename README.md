@@ -1,96 +1,30 @@
-# Ganocracy: Democratizing GANs
+# GANocracy: Democratizing GANs
 
-## Introduction:
-[TODO]
-## For Tutorial Attendees.
-[TODO]
-#### Before you arrive
-[TODO]
-## Installation
 
-This repo has been tested with Python 3.6+ and Pytorch 1.0+. **Note:** While it may be possible to make use of this repo with earlier versions of Python and PyTorch, it has not been tested and will likely require small modifications scattered throughout the code.
 
-### Requirements:
-- Python 3.6 or greater.
-- PyTorch 1.1 (LTS). Detailed installation instructions can be found in [here](https://pytorch.org/get-started/locally/).
-- torchvision 0.3.0. **Note**: Version 0.3.0 was just announced on May 23, 2019, so existing installations may need updating.
-- tqdm, numpy, scipy, and h5py
-- moviepy (optional)
+This repository contains the two Jupyter notebooks used during the May 31, 2019 [GANocracy tutorial](http://ganocracy.csail.mit.edu/tutorial/tutorial.html) at MIT.
 
-If your system does not already meet these requirements, we recommend downloading the Anaconda Distribution of Python 3. Anaconda comes with the package manager `conda`,  which makes installing PyTorch and other dependencies much easier. See below for step-by-step instructions.
+#### Setup
+Please complete the [setup instructions](http://ganocracy.csail.mit.edu/tutorial/setup.html) before running the notebooks.
 
-### Step-by-step Instructions:
-#### macOS
-**Step 1: Install Anaconda.** While many systems come with Python already installed, it may not be the latest version. For example, macOS comes with Python 2.7 by default, but this is not supported by the tutorial.
+###1. [Exploring a Generator with GANdissect](gandissect)
+by: [David Bau](https://people.csail.mit.edu/davidbau/home/), MIT
 
-```sh
-# Download installation scripts from Anaconda website:
-curl -O https://repo.anaconda.com/archive/Anaconda3-2019.03-MacOSX-x86_64.sh
-# Run the interactive installation script:
-sh Anaconda3-2019.03-MacOSX-x86_64.sh # and follow the prompts. The defaults are generally good.
-```
+When GANs generate images, are they simply reproducing memorized pixel patterns, or are they composing images from learned objects? How do different architectures affect what the GAN learns? Which neurons are responsible for undesirable artifacts in generated images?
 
-**Verify your installation:** If you accepted the defaults above, your system should now be using anaconda python by default. To verify that everything is setup properly, check that `which conda`, `which pip` and `which python` all point to the correct path. Additionally, you can check you installed the right version of python with `python --version`.
+GANdissect [[GitHub](https://github.com/CSAILVision/gandissect), [paper](https://arxiv.org/pdf/1811.10597.pdf)] is an analytic framework for visualizing the internal representations of a GAN generator at the unit-, object-, and scene-level.
 
-**Step 2 (optional): Create Conda Environment.** Each project typically has its own set of requirments for specific python packages and versions. When working on multiple projects simultaneously, it can cumbersome and difficult to manage which packages and versions are being used for any given project. In response, package managers like `conda` allow you to create isolated environments as a way to avoid dependency conflicts.
+![GANdissect unit visualization](/Users/kvgallagher/PycharmProjects/ganocracy/gandissect/assets/GANdissect.jpg)
+<sup>Image credit: Bau, David, et al. ["GAN Dissection: Visualizing and Understanding Generative Adversarial Networks."](https://arxiv.org/pdf/1811.10597.pdf) arXiv preprint arXiv:1811.10597 (2018).</sup>
 
-```sh
-# Create a conda environment called 'ganocracy'
-conda create --name ganocracy
-# To activate this environment, use:
-conda activate ganocracy
-```
+GANdissect helps shed light on what representations GANs are learning across layers, models, and datasets, and we can use that knowledge to compare, improve, and better control GAN performance.
 
-**Step 3: Intall PyTorch and Dependencies:**
+###2. [Training a GAN](gan_training)
+by: [Alex Andonian](https://www.alexandonian.com/), MIT
 
-Installing that latest version of PyTorch and torchvision can be done in single line:
+![DCGAN training progress](/Users/kvgallagher/PycharmProjects/ganocracy/assets/GANdissect.jpg)
+<sup>Image credit: Alex Andonian</sup>
 
-```sh
-conda install pytorch torchvision -c pytorch
-```
+How do you actually build and train a GAN? What are best practices, tips, and tricks to help simplify the process? 
 
-and the dependencies with:
-
-```sh
-conda install h5py
-pip install tqdm moviepy
-```
-
-#### Starting a Jupyter Notebook
-
-**Locally:** You can navigate to the directory of interest `tutorial` and start a jupyter notebook with the following:
-
-```sh
-cd tutorial
-jupyter notebook
-```
-A browser window shoud automatically open.
-
-**Remotely with SSH Port-Forwarding:** If you are fortunate to have access to a headless remote server, ideally with several GPUs, it is possible to run the notebook on the server and still view it locally on your personal machine via ssh port-forwarding. Feel free to read more about ssh port-forwarding on your own, but it's not necesary for this tutorial. Using port forwarding to view juypter notebooks on a remote server requires two steps:
-1. **On the REMOTE machine**: Start the jupyter notebook as normal. You may need to include the `--no-browser` option:
-    ```sh
-    cd tutorial
-    jupyter notebook --no-browser
-    ```
-    Jupyter notebook will display a bunch of information, which should include something like:
-```
-[I 18:20:18.770 NotebookApp] The Jupyter Notebook is running at: http://localhost:8888/?token=MY_TOKEN
-[I 18:20:18.770 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-[C 18:20:18.771 NotebookApp]
-
-    Copy/paste this URL into your browser when you connect for the first time,
-    to login with a token:
-        http://localhost:8888/?token=MY_TOKEN
-```
-
-Make note of the port number and token. In this case, we have `REMOTE_PORT=8888` and
-
-2. **On the LOCAL machine:** Decide which port you want to use to view the notebook. Choose anything in the range 1024-49151  (unreserved "user" ports). Call the port forwarding command:
-
-```
-LOCAL_PORT=8888
-REMOTE_PORT=8888  # From step 1.
-
-ssh -fNL $LOCAL_PORT:localhost:$REMOTE_PORT $REMOTE_IP_ADDR
-```
-In your browser, navigate to `localhost:$LOCAL_PORT`. If you are prompted, enter your token from step 1. You should now be able to see your jupyter notebooks running on the remote server!
+This notebook offers a step-by-step walk-through in PyTorch of Deep Convolutional (DCGAN) and Conditional (cGAN) GAN training, from data preparation and ingestion through results analysis.
