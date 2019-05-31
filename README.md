@@ -14,7 +14,7 @@ When GANs generate images, are they simply reproducing memorized pixel patterns,
 
 GANdissect [[GitHub](https://github.com/CSAILVision/gandissect), [paper](https://arxiv.org/pdf/1811.10597.pdf)] is an analytic framework for visualizing the internal representations of a GAN generator at the unit-, object-, and scene-level.
 
-![GANdissect unit visualization](gandissect/assets/GANdissect.jpg =250x250)
+<img src="gandissect/assets/GANdissect.jpg" width="700" height="700">
 <sup>Image credit: Bau, David, et al. ["GAN Dissection: Visualizing and Understanding Generative Adversarial Networks."](https://arxiv.org/pdf/1811.10597.pdf) arXiv preprint arXiv:1811.10597 (2018).</sup>
 
 GANdissect helps shed light on what representations GANs are learning across layers, models, and datasets, and we can use that knowledge to compare, improve, and better control GAN performance.
