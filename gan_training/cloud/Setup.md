@@ -1,7 +1,7 @@
 
 ## 1. Configuring and Creating Virtual Machines
-    TODO...
-    System Requirements
+
+Please see cloud provider specific instructions for creating the virtual machine. Once you are able to log into the VM, these instructions may be useful.
 
 ### Formatting and mounting a persistent disk
 
