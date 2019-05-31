@@ -22,9 +22,9 @@ GANdissect helps shed light on what representations GANs are learning across lay
 ### 2. [Training a GAN](gan_training)
 by: [Alex Andonian](https://www.alexandonian.com/), MIT
 
-How do you actually build and train a GAN? What are best practices, tips, and tricks to help simplify the process? 
+How do you actually build and train a Generative Adversarial Network? What are best practices, tips, and tricks to help simplify the process? 
 
-This notebook offers a step-by-step walk-through in PyTorch of Deep Convolutional (DCGAN) and Conditional (cGAN) GAN training, from data preparation and ingestion through results analysis.
+This notebook offers a step-by-step walk-through in PyTorch of Deep Convolutional GAN (DCGAN) training, from data preparation and ingestion through results analysis.
 
 <img src="gan_training/assets/dcgan_progress.gif" width="700" height="700">
 <sup>Image credit: Alex Andonian</sup>
