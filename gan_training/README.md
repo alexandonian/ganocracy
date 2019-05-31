@@ -1,7 +1,16 @@
 # GAN Training Tutorial Setup
 
+This tutorial can be cloned via
 
-This repo has been tested with Python 3.6+ and Pytorch 1.0+. **Note:** While it may be possible to make use of this repo with earlier versions of Python and PyTorch, it has not been tested and will likely require small modifications scattered throughout the code.
+```
+git clone https://github.com/alexandonian/ganocracy.git
+```
+
+If you do not have git installed on your local machine, you can download the repo as a ZIP file with
+
+```
+wget https://github.com/alexandonian/ganocracy/archive/master.zip
+```
 
 ### Note:
 
@@ -11,7 +20,7 @@ If you have already completed the configuration for the [GANdissect notebook](..
 conda activate netd
 ```
 
-Otherwise, continue reading for instructions on how to get set up to run this notebook.
+In that case, you can skip directly to "Starting the Jupyter Notebook". Otherwise, continue reading for instructions on how to get set up to run this notebook.
 
 ### Requirements:
 - Python 3.6 or greater.
@@ -48,16 +57,17 @@ pip install tqdm moviepy
 
 ### Starting the Jupyter Notebook
 	
-**Locally:** You can start a jupyter notebook from this directory (`gan_training`) with the following:
+**Locally:** You can start the tutorial notebook from the repository (`ganocracy`) you cloned or downloaded via:
 	
 ```
+cd gan_training
 jupyter notebook
 ```
-A browser window shoud automatically open.
+A browser window should automatically open.
 	
 **Remotely with SSH Port-Forwarding:** If you are fortunate to have access to a headless remote server, ideally with several GPUs, it is possible to run the notebook on the server and still view it locally on your personal machine via ssh port-forwarding. Feel free to read more about ssh port-forwarding on your own, but it's not necessary for this tutorial.
  
- Using port forwarding to view juypter notebooks on a remote server requires two steps:
+ Using port forwarding to view Juypter notebooks on a remote server requires two steps:
  
 1. **On the REMOTE machine**: Start the jupyter notebook as normal. You may need to include the `--no-browser` option:
     ```
