@@ -22,10 +22,6 @@ GANdissect helps shed light on what representations GANs are learning across lay
 ###2. [Training a GAN](gan_training)
 by: [Alex Andonian](https://www.alexandonian.com/), MIT
 
-<video width="320" height="240" controls>
-  <source src="gan_training/assets/dcgan_progress.mp4" type="video/mp4">
-</video>
-
 ![DCGAN training progress](gan_training/assets/dcgan_progress.gif)
 <sup>Image credit: Alex Andonian</sup>
 
