@@ -53,7 +53,7 @@ pip install tqdm moviepy
 cd gan_training
 jupyter notebook
 ```
-A browser window should automatically open.
+A browser window should automatically open, and you can run the notebook `Training.ipynb`
 	
 **Remotely with SSH Port-Forwarding:** If you are fortunate to have access to a headless remote server, ideally with several GPUs, it is possible to run the notebook on the server and still view it locally on your personal machine via ssh port-forwarding. Feel free to read more about ssh port-forwarding on your own, but it's not necessary for this tutorial.
  
@@ -85,4 +85,6 @@ A browser window should automatically open.
     
     ssh -fNL $LOCAL_PORT:localhost:$REMOTE_PORT $REMOTE_IP_ADDR
     ```
-    In your browser, navigate to `localhost:$LOCAL_PORT`. If you are prompted, enter your token from step 1. You should now be able to see your jupyter notebooks running on the remote server!
+    In your browser, navigate to `localhost:$LOCAL_PORT`. If you are prompted, enter your token from step 1. You should now be able to see your jupyter notebooks running on the remote server.
+    
+    Finally, run the notebook `Training.ipynb`
