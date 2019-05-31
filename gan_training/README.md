@@ -46,7 +46,7 @@ conda install h5py
 pip install tqdm moviepy
 ```
 
-#### Starting the Jupyter Notebook
+### Starting the Jupyter Notebook
 	
 **Locally:** You can start a jupyter notebook from this directory (`gan_training`) with the following:
 	
