@@ -22,7 +22,7 @@ Then go to the main folder `gandissect` and run the setup scripts:
 cd gandissect
 script/setup_env.sh      # Create a conda environment with dependencies
 script/make_dirs.sh      # Create the dataset and dissect directories
-conda activate netd      # Enter the conda environment
+source activate netd     # Enter the conda environment (FOR WINDOWS: activate netd)
 pip install -v -e .      # Link the local netdissect package into the env
 ```
 <sub>Note: If you downloaded the repo with wget in the previous step, the main folder will be`gandissect-tutorial`</sub>

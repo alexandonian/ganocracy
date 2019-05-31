@@ -12,16 +12,6 @@ If you do not have git installed on your local machine, you can download the rep
 wget https://github.com/alexandonian/ganocracy/archive/master.zip
 ```
 
-### Note:
-
-If you have already completed the configuration for the [GANdissect notebook](../gandissect), you may be able to use the `netd` environment for this notebook as well without any further configuration:
-
-```
-conda activate netd
-```
-
-In that case, you can skip directly to "Starting the Jupyter Notebook". Otherwise, continue reading for instructions on how to get set up to run this notebook.
-
 ### Requirements:
 - Python 3.6 or greater.
 - PyTorch 1.1 (LTS). Detailed installation instructions can be found [here](https://pytorch.org/get-started/locally/).
@@ -38,7 +28,7 @@ In that case, you can skip directly to "Starting the Jupyter Notebook". Otherwis
 conda create --name gantraining
 
 # To activate this environment, use:
-conda activate gantraining
+source activate gantraining  # FOR WINDOWS: activate gantraining
 ```
 
 **Step 3: Install PyTorch and dependencies:**
