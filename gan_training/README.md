@@ -16,7 +16,7 @@ wget https://github.com/alexandonian/ganocracy/archive/master.zip
 - Python 3.6 or greater.
 - PyTorch 1.1 (LTS). Detailed installation instructions can be found [here](https://pytorch.org/get-started/locally/).
 - torchvision 0.3.0. **Note**: Version 0.3.0 was just announced on May 23, 2019, so existing installations may need updating.
-- tqdm, numpy, scipy, and h5py
+- tqdm, numpy, scipy, pandas, and h5py
 - moviepy (optional)
 
 **Step 1: Download Anaconda** If your system does not already meet these requirements, we recommend downloading the Anaconda Distribution of Python 3. Anaconda comes with the package manager `conda` (installation instructions can be found [here](http://ganocracy.csail.mit.edu/tutorial/setup.html)),  which makes installing PyTorch and other dependencies much easier.
@@ -41,7 +41,7 @@ conda install pytorch torchvision -c pytorch
 and the dependencies with:
 	
 ```
-conda install h5py
+conda install h5py pandas
 pip install tqdm moviepy
 ```
 
