@@ -28,7 +28,7 @@ wget https://github.com/alexandonian/ganocracy/archive/master.zip
 conda create --name gantraining
 
 # To activate this environment, use:
-source activate gantraining  # FOR WINDOWS: activate gantraining
+conda activate gantraining
 ```
 
 **Step 3: Install PyTorch and dependencies:**
