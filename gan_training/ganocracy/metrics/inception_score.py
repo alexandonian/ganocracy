@@ -156,7 +156,7 @@ def sqrt_newton_schulz(A, numIters, dtype=None):
 
 # FID calculator from TTUR--consider replacing this with GPU-accelerated cov
 # calculations using torch?
-def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
+def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-8):
     """Numpy implementation of the Frechet Distance.
     Taken from https://github.com/bioinf-jku/TTUR
     The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1)
@@ -212,7 +212,7 @@ def numpy_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     return out
 
 
-def torch_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
+def torch_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-8):
     """Pytorch implementation of the Frechet Distance.
     Taken from https://github.com/bioinf-jku/TTUR
     The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1)
@@ -239,7 +239,7 @@ def torch_calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
 
     diff = mu1 - mu2
     # Run 50 itrs of newton-schulz to get the matrix sqrt of sigma1 dot sigma2
-    covmean = sqrt_newton_schulz(sigma1.mm(sigma2).unsqueeze(0), 50).squeeze()
+    covmean = sqrt_newton_schulz(sigma1.mm(sigma2).unsqueeze(0), 250).squeeze()
     out = (diff.dot(diff) + torch.trace(sigma1) + torch.trace(sigma2)
            - 2 * torch.trace(covmean))
     return out
@@ -273,7 +273,7 @@ def accumulate_inception_activations(sample, net, num_inception_images=50000):
     return torch.cat(pool, 0), torch.cat(logits, 0), torch.cat(labels, 0)
 
 
-def load_inception_net(gpu=None, distributed=None, device='cuda'):
+def load_inception_net(parallel=True, device='cuda'):
     """Load and wrap the Inception model.
 
     Args:
@@ -284,26 +284,17 @@ def load_inception_net(gpu=None, distributed=None, device='cuda'):
     Returns:
         (nn.Module): Wrapped inception model.
     """
+
     inception_model = inception_v3(pretrained=True, transform_input=False)
     inception_model = WrapInception(inception_model.eval()).to(device)
-    if distributed:
-        if gpu is not None:
-            torch.cuda.set_device(gpu)
-            inception_model.cuda(gpu)
-        else:
-            inception_model.cuda()
-            inception_model = torch.nn.parallel.DistributedDataParallel(
-                inception_model
-            )
-    elif gpu is not None:
-        torch.cuda.set_device(gpu)
-        inception_model = inception_model.cuda(gpu)
-    else:
-        inception_model = torch.nn.DataParallel(inception_model).to(device)
+    if parallel:
+        print('Parallelizing Inception module...')
+        inception_model = nn.DataParallel(inception_model)
     return inception_model
 
 
-def prepare_inception_metrics(inception_moments_file, config, no_fid=False):
+def prepare_inception_metrics(inception_moments_file, no_fid=False, 
+                              device='cuda', parallel=True):
     """
     This produces a function which takes in an iterator which returns a set number of samples
     and iterates until it accumulates config['num_inception_images'] images.
@@ -317,10 +308,17 @@ def prepare_inception_metrics(inception_moments_file, config, no_fid=False):
     data_mu, data_sigma = data['mu'], data['sigma']
 
     # Load network
-    net = load_inception_net(gpu=config['gpu'], distributed=config['distributed'])
+    net = load_inception_net(parallel=parallel, device=device)
 
-    def get_inception_metrics(sample, num_inception_images, num_splits=10,
-                              prints=True, use_torch=True):
+    def get_inception_metrics(G, batch_size, dim_z, n_classes=1, num_inception_images=20000,
+                              num_splits=10, prints=True, use_torch=True):
+        def sample():
+            with torch.no_grad():
+                z = torch.randn(batch_size, dim_z, device=device)
+                y = torch.randint(n_classes, (batch_size,), device=device)
+                G_z = G(z)
+            return G_z, y
+        
         if prints:
             print('Gathering activations...')
         pool, logits, labels = accumulate_inception_activations(sample, net, num_inception_images)
