@@ -347,12 +347,12 @@ def prepare_inception_metrics(inception_moments_file, no_fid=False,
     return get_inception_metrics
 
 
-def calculate_inception_moments(dataloader, root, name, gpu=None, device='cuda'):
+def calculate_inception_moments(dataloader, root, name, parallel=True, device='cuda'):
     filename = os.path.join(root, name + '_inception_moments.npz')
     if os.path.exists(filename):
         print('{} found!'.format(filename))
         return filename
-    net = load_inception_net(distributed=False, gpu=gpu, device=device)
+    net = load_inception_net(parallel=parallel, device=device)
     pool, logits, labels = [], [], []
     for i, (x, y) in enumerate(tqdm(dataloader)):
         x = x.to(device)
